@@ -1,0 +1,75 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"             
+             x:Class="RealSpeed2.MainPage"          
+             >
+
+    <ScrollView>
+        <VerticalStackLayout
+            Padding="30,0"
+            Spacing="25">
+
+            <Label
+                x:Name="lblRealSpeed"
+                Text="{Binding RealSpeed}"
+                Style="{StaticResource Speed}"
+                SemanticProperties.HeadingLevel="Level2"
+                SemanticProperties.Description="GPS Real Speed" />
+
+            <Label
+                Text="Km/h"
+                Style="{StaticResource SpeedUnit}"
+                SemanticProperties.HeadingLevel="Level1" />
+
+            <StackLayout x:Name="pnlGPSDetails" 
+                         IsVisible="False" 
+                         Padding="10" 
+                         Margin="10"
+                         >
+                <Label
+                    Text="GPS :"
+                    Style="{StaticResource GPSDetails}"
+                    SemanticProperties.HeadingLevel="Level1" />
+                <Label
+                    x:Name="lblGPSDetails"
+                    Text="{Binding Location}"
+                    Style="{StaticResource GPSDetails}"
+                    SemanticProperties.HeadingLevel="Level2"
+                    SemanticProperties.Description="GPS all details" />
+                <Label
+                    Text="Calculated Speed (Haversine Distance / time) :"
+                    Style="{StaticResource GPSDetails}"
+                    SemanticProperties.HeadingLevel="Level1" />
+                <Label
+                 x:Name="lblGPSSpeed"
+                 Text="{Binding CalculatedSpeed}"
+                 Style="{StaticResource GPSDetails}"
+                 SemanticProperties.HeadingLevel="Level2"
+                 SemanticProperties.Description="GPS Calculated Speed" />
+
+            </StackLayout>
+
+            <Button Text="Show GPS details" 
+                    Style="{StaticResource BtnGPSDetails}"
+                    Clicked="OnGetGPSInfoClicked"/>
+
+            <Button Text="Change GPS Accuracy" 
+                    Style="{StaticResource BtnGPSDetails}"
+                    Clicked="OnChangeAccuracyClicked"/>
+
+            <Button Text="Change GPS Timeout" 
+                    Style="{StaticResource BtnGPSDetails}"
+                    Clicked="OnChangeTimeoutClicked"/>
+
+            <Label
+                x:Name="lblGPSLog"
+                Text=""
+                Style="{StaticResource SubHeadline}"
+                SemanticProperties.HeadingLevel="Level2"
+                SemanticProperties.Description="GPS logs" />
+
+        </VerticalStackLayout>
+
+    </ScrollView>
+
+</ContentPage>
