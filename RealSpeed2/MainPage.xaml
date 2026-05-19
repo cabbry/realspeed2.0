@@ -21,9 +21,9 @@
                 Style="{StaticResource SpeedUnit}"
                 SemanticProperties.HeadingLevel="Level1" />
 
-            <StackLayout x:Name="pnlGPSDetails" 
-                         IsVisible="False" 
-                         Padding="10" 
+            <StackLayout x:Name="pnlGPSDetails"
+                         IsVisible="False"
+                         Padding="10"
                          Margin="10"
                          >
                 <Label
@@ -46,20 +46,18 @@
                  Style="{StaticResource GPSDetails}"
                  SemanticProperties.HeadingLevel="Level2"
                  SemanticProperties.Description="GPS Calculated Speed" />
+                <Label
+                    Text="{Binding UpdateCount, StringFormat='Updates received: {0}'}"
+                    Style="{StaticResource GPSDetails}" />
+                <Label
+                    Text="{Binding LastUpdate, StringFormat='Last update: {0:HH:mm:ss.fff}'}"
+                    Style="{StaticResource GPSDetails}" />
 
             </StackLayout>
 
-            <Button Text="Show GPS details" 
+            <Button Text="Show GPS details"
                     Style="{StaticResource BtnGPSDetails}"
                     Clicked="OnGetGPSInfoClicked"/>
-
-            <Button Text="Change GPS Accuracy" 
-                    Style="{StaticResource BtnGPSDetails}"
-                    Clicked="OnChangeAccuracyClicked"/>
-
-            <Button Text="Change GPS Timeout" 
-                    Style="{StaticResource BtnGPSDetails}"
-                    Clicked="OnChangeTimeoutClicked"/>
 
             <Label
                 x:Name="lblGPSLog"

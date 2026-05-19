@@ -26,16 +26,12 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
-	<key>XSAppIconAssets</key>
-	<string>Assets.xcassets/appicon.appiconset</string>
 	<key>CFBundleIdentifier</key>
 	<string>com.cabbry.realspeed2</string>
 	<key>CFBundleShortVersionString</key>
 	<string>0.1.2.0</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>We need your location to show your current position on the map.</string>
-	<key>NSLocationAlwaysUsageDescription</key>
-	<string>We need your location to track your movement even in the background.</string>
+	<string>We need your location to compute your real-time speed.</string>
 	<key>CFBundleVersion</key>
 	<string>4</string>
 </dict>

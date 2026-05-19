@@ -10,21 +10,43 @@ namespace RealSpeed2
 {
     public class LocationViewModel : INotifyPropertyChanged
     {
-        private Location _location;
-        public Location Location
+        private Location? _location;
+        public Location? Location
         {
             get => _location;
             set
             {
-                if (_location?.Timestamp != value.Timestamp)
+                _location = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private int _updateCount;
+        public int UpdateCount
+        {
+            get => _updateCount;
+            set
+            {
+                if (_updateCount != value)
                 {
-                    _location = value;
+                    _updateCount = value;
                     OnPropertyChanged();
                 }
             }
         }
 
-        private string _realSpeed;
+        private DateTime _lastUpdate;
+        public DateTime LastUpdate
+        {
+            get => _lastUpdate;
+            set
+            {
+                _lastUpdate = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private string _realSpeed = string.Empty;
         public string RealSpeed
         {
             get => _realSpeed;
@@ -38,7 +60,7 @@ namespace RealSpeed2
             }
         }
 
-        private string _calculatedSpeed;
+        private string _calculatedSpeed = string.Empty;
         public string CalculatedSpeed
         {
             get => _calculatedSpeed;
@@ -52,37 +74,9 @@ namespace RealSpeed2
             }
         }
 
-        private GeolocationAccuracy _accuracy;
-        public GeolocationAccuracy Accuracy
-        {
-            get => _accuracy;
-            set
-            {
-                if (_accuracy != value)
-                {
-                    _accuracy = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
+        public event PropertyChangedEventHandler? PropertyChanged;
 
-        private TimeSpan _timeout;
-        public TimeSpan Timeout
-        {
-            get => _timeout;
-            set
-            {
-                if (_timeout != value)
-                {
-                    _timeout = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        protected void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        protected void OnPropertyChanged([CallerMemberName] string? propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }

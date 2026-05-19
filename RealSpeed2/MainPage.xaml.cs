@@ -1,15 +1,15 @@
-﻿using Microsoft.Maui.Devices.Sensors;
-using static Microsoft.Maui.ApplicationModel.Permissions;
-using Microsoft.Maui.Controls;
+using Microsoft.Maui.ApplicationModel;
+using Microsoft.Maui.Devices.Sensors;
 
 namespace RealSpeed2
 {
     public partial class MainPage : ContentPage
     {
-        private static bool _isTracking = false;
-        private Location _previousLocation = null;
-        private LocationViewModel _viewModel;
-        private int _delay = 1000;
+        private Location? _previousLocation;
+        private readonly LocationViewModel _viewModel;
+#if WINDOWS
+        private CancellationTokenSource? _pollingCts;
+#endif
 
         public MainPage()
         {
@@ -17,57 +17,35 @@ namespace RealSpeed2
 
             _viewModel = new LocationViewModel();
             BindingContext = _viewModel;
+        }
 
-            // Empêche l'écran de se verrouiller automatiquement
+        protected override async void OnAppearing()
+        {
+            base.OnAppearing();
+
             DeviceDisplay.KeepScreenOn = true;
-
-            StartTracking(TimeSpan.Zero);
-
-        }
-
-        protected override void OnDisappearing()
-        {
-            base.OnDisappearing();
-
-            // Réactiver le verrouillage automatique de l'écran lorsque la page disparaît
-            DeviceDisplay.KeepScreenOn = false;
-
-            _isTracking = false;
-        }
-
-        private async void StartTracking(TimeSpan timeout, GeolocationAccuracy geolocationAccuracy = GeolocationAccuracy.Default)
-        {
 
             try
             {
-                _isTracking = true;
-
-                while (_isTracking)
+                var status = await Permissions.RequestAsync<Permissions.LocationWhenInUse>();
+                if (status != PermissionStatus.Granted)
                 {
-                    var request = new GeolocationRequest(geolocationAccuracy, timeout);
-                    var location = await Geolocation.GetLocationAsync(request);
-
-                    if (location != null)
-                    {
-                        // Check if the location has changed
-                        if (_previousLocation == null ||
-                            location.Timestamp != _previousLocation.Timestamp)
-                        {
-                            if (_previousLocation != null)
-                            {
-                                _viewModel.RealSpeed = ((location.Speed ?? 0.0) * 3.6).ToString("F1"); // m/s * 3.6 -> km/h
-                                _viewModel.CalculatedSpeed = CalculGPS.CalculateSpeedKmh(_previousLocation.Latitude, _previousLocation.Longitude, _previousLocation.Timestamp.DateTime, location.Latitude, location.Longitude, location.Timestamp.DateTime).ToString("F1");
-                            }
-
-                            _previousLocation = location;
-                            _viewModel.Location = location;
-                        }
-
-                    }
-
-                    await Task.Delay(_delay); // Delay de X secondes avant la prochaine vérification
+                    lblGPSLog.Text = "GPS permission denied.";
+                    return;
                 }
 
+#if WINDOWS
+                _pollingCts = new CancellationTokenSource();
+                _ = PollLocationAsync(_pollingCts.Token);
+#else
+                Geolocation.Default.LocationChanged += OnLocationChanged;
+                Geolocation.Default.ListeningFailed += OnListeningFailed;
+
+                var request = new GeolocationListeningRequest(GeolocationAccuracy.Best, TimeSpan.FromSeconds(1));
+                var started = await Geolocation.Default.StartListeningForegroundAsync(request);
+                if (!started)
+                    lblGPSLog.Text = "Could not start GPS listening.";
+#endif
             }
             catch (Exception ex)
             {
@@ -75,56 +53,82 @@ namespace RealSpeed2
             }
         }
 
-        private void StopTracking()
+        protected override void OnDisappearing()
         {
-            _isTracking = false;
+            base.OnDisappearing();
+
+            DeviceDisplay.KeepScreenOn = false;
+
+#if WINDOWS
+            _pollingCts?.Cancel();
+            _pollingCts?.Dispose();
+            _pollingCts = null;
+#else
+            Geolocation.Default.LocationChanged -= OnLocationChanged;
+            Geolocation.Default.ListeningFailed -= OnListeningFailed;
+            Geolocation.Default.StopListeningForeground();
+#endif
+
+            _previousLocation = null;
             _viewModel.RealSpeed = "";
-            Thread.Sleep(_delay + 10); //tempo pour être certain que le tracking ce désactive
+            _viewModel.CalculatedSpeed = "";
+        }
+
+#if WINDOWS
+        private async Task PollLocationAsync(CancellationToken ct)
+        {
+            while (!ct.IsCancellationRequested)
+            {
+                try
+                {
+                    var request = new GeolocationRequest(GeolocationAccuracy.Best, TimeSpan.FromSeconds(5));
+                    var location = await Geolocation.Default.GetLocationAsync(request, ct);
+                    if (location != null)
+                        ProcessLocation(location);
+                }
+                catch (OperationCanceledException) { break; }
+                catch (Exception ex)
+                {
+                    lblGPSLog.Text = $"GPS poll error: {ex.Message}";
+                }
+
+                try { await Task.Delay(1000, ct); }
+                catch (OperationCanceledException) { break; }
+            }
+        }
+#endif
+
+        private void OnLocationChanged(object? sender, GeolocationLocationChangedEventArgs e)
+        {
+            if (e.Location != null) ProcessLocation(e.Location);
+        }
+
+        private void OnListeningFailed(object? sender, GeolocationListeningFailedEventArgs e)
+        {
+            lblGPSLog.Text = $"GPS listening failed: {e.Error}";
+        }
+
+        private void ProcessLocation(Location location)
+        {
+            _viewModel.UpdateCount++;
+            _viewModel.LastUpdate = DateTime.Now;
+
+            if (_previousLocation != null && location.Timestamp != _previousLocation.Timestamp)
+            {
+                _viewModel.RealSpeed = ((location.Speed ?? 0.0) * 3.6).ToString("F1");
+                _viewModel.CalculatedSpeed = CalculGPS.CalculateSpeedKmh(
+                    _previousLocation.Latitude, _previousLocation.Longitude, _previousLocation.Timestamp.DateTime,
+                    location.Latitude, location.Longitude, location.Timestamp.DateTime).ToString("F1");
+            }
+
+            _previousLocation = location;
+            _viewModel.Location = location;
         }
 
         private void OnGetGPSInfoClicked(object sender, EventArgs e)
         {
-            // Alterner la visibilité du panneau
             pnlGPSDetails.IsVisible = !pnlGPSDetails.IsVisible;
-
-            // Mettre à jour le texte du bouton en fonction de la visibilité du panneau
             ((Button)sender).Text = pnlGPSDetails.IsVisible ? "Hide GPS details" : "Show GPS details";
         }
-
-        private void OnChangeAccuracyClicked(object sender, EventArgs e)
-        {
-            // 0 iOS:     Default = Medium
-            // 1 iOS:     Lowest = ThreeKilometers (3000m)
-            // 2 iOS:     Low = Kilometer          (1000m)
-            // 3 iOS:     Medium = HundredMeters   (100m)
-            // 4 iOS:     High = NearestTenMeters  (10m)
-            // 5 iOS:     Best                     (0m)
-
-            if (_viewModel.Accuracy < GeolocationAccuracy.Medium)
-                _viewModel.Accuracy = GeolocationAccuracy.Medium;
-            else if (_viewModel.Accuracy < GeolocationAccuracy.Best)
-                _viewModel.Accuracy++;
-            else
-                _viewModel.Accuracy = GeolocationAccuracy.Medium;
-
-            ((Button)sender).Text = $"Change GPS Acc ({_viewModel.Accuracy.ToString()})";
-            StopTracking();
-            StartTracking(_viewModel.Timeout, _viewModel.Accuracy);
-        }
-
-        private void OnChangeTimeoutClicked(object sender, EventArgs e)
-        {
-
-            StopTracking();
-            _viewModel.Timeout = _viewModel.Timeout.Add(new TimeSpan(0, 0, 0, 0, 500));
-
-            if (TimeSpan.Compare(_viewModel.Timeout, new TimeSpan(0, 0, 0, 0, 1500)) == 1)
-                _viewModel.Timeout = TimeSpan.Zero;
-
-            ((Button)sender).Text = $"Change GPS Timeout ({_viewModel.Timeout.TotalMilliseconds.ToString()} ms)";
-            StartTracking(_viewModel.Timeout, _viewModel.Accuracy);            
-        }
-
     }
-
 }
