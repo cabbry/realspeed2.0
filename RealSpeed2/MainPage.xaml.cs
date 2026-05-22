@@ -7,6 +7,7 @@ namespace RealSpeed2
     {
         private Location? _previousLocation;
         private readonly LocationViewModel _viewModel;
+        private double _maxSpeedKmh;
 #if WINDOWS
         private CancellationTokenSource? _pollingCts;
 #endif
@@ -115,20 +116,37 @@ namespace RealSpeed2
 
             if (_previousLocation != null && location.Timestamp != _previousLocation.Timestamp)
             {
-                _viewModel.RealSpeed = ((location.Speed ?? 0.0) * 3.6).ToString("F1");
-                _viewModel.CalculatedSpeed = CalculGPS.CalculateSpeedKmh(
+                var realSpeedKmh = (location.Speed ?? 0.0) * 3.6;
+                _viewModel.RealSpeed = FormatSpeed(realSpeedKmh);
+                _viewModel.CalculatedSpeed = FormatSpeed(CalculGPS.CalculateSpeedKmh(
                     _previousLocation.Latitude, _previousLocation.Longitude, _previousLocation.Timestamp.DateTime,
-                    location.Latitude, location.Longitude, location.Timestamp.DateTime).ToString("F1");
+                    location.Latitude, location.Longitude, location.Timestamp.DateTime));
+
+                if (realSpeedKmh > _maxSpeedKmh)
+                {
+                    _maxSpeedKmh = realSpeedKmh;
+                    _viewModel.MaxSpeed = FormatSpeed(_maxSpeedKmh);
+                }
             }
 
             _previousLocation = location;
             _viewModel.Location = location;
         }
 
+        // Speeds under 100 km/h are shown with one decimal (e.g. "85.3");
+        // at 100 km/h and above the decimal is dropped (e.g. "120") to keep the display compact.
+        private static string FormatSpeed(double kmh) => kmh.ToString(kmh >= 100.0 ? "F0" : "F1");
+
         private void OnGetGPSInfoClicked(object sender, EventArgs e)
         {
             pnlGPSDetails.IsVisible = !pnlGPSDetails.IsVisible;
             ((Button)sender).Text = pnlGPSDetails.IsVisible ? "Hide GPS details" : "Show GPS details";
+        }
+
+        private void OnResetMaxSpeedClicked(object sender, EventArgs e)
+        {
+            _maxSpeedKmh = 0.0;
+            _viewModel.MaxSpeed = FormatSpeed(0.0);
         }
     }
 }

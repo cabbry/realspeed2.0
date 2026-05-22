@@ -74,6 +74,20 @@ namespace RealSpeed2
             }
         }
 
+        private string _maxSpeed = "0.0";
+        public string MaxSpeed
+        {
+            get => _maxSpeed;
+            set
+            {
+                if (_maxSpeed != value)
+                {
+                    _maxSpeed = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
         public event PropertyChangedEventHandler? PropertyChanged;
 
         protected void OnPropertyChanged([CallerMemberName] string? propertyName = null)

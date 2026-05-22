@@ -60,6 +60,17 @@
                     Clicked="OnGetGPSInfoClicked"/>
 
             <Label
+                x:Name="lblMaxSpeed"
+                Text="{Binding MaxSpeed, StringFormat='Vmax {0} Km/h'}"
+                Style="{StaticResource SpeedUnit}"
+                SemanticProperties.HeadingLevel="Level2"
+                SemanticProperties.Description="Maximum speed reached" />
+
+            <Button Text="Reset Vmax"
+                    Style="{StaticResource BtnGPSDetails}"
+                    Clicked="OnResetMaxSpeedClicked"/>
+
+            <Label
                 x:Name="lblGPSLog"
                 Text=""
                 Style="{StaticResource SubHeadline}"
