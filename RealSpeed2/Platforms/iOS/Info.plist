@@ -35,5 +35,10 @@
 	<string>We need your location to compute your real-time speed.</string>
 	<key>XSAppIconAssets</key>
 	<string>Assets.xcassets/appicon.appiconset</string>
+	<!-- iOS 26 "Liquid Glass" opt-out: render with the pre-iOS-26 design language
+	     so MAUI controls don't get the new translucent material overlays.
+	     Remove this once the UI is intentionally updated for Liquid Glass. -->
+	<key>UIDesignRequiresCompatibility</key>
+	<true/>
 </dict>
 </plist>
