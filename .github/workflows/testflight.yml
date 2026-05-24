@@ -37,7 +37,8 @@ jobs:
 
       - name: Install MAUI workload
         run: |
-          dotnet workload install maui-ios
+          # Install full MAUI workload (covers iOS + MacCatalyst, both referenced by csproj on macOS)
+          dotnet workload install maui
           dotnet workload list
 
       - name: Import Apple Distribution certificate
