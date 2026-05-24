@@ -128,13 +128,24 @@ jobs:
           cp $RUNNER_TEMP/profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/$UUID.mobileprovision
           cp $RUNNER_TEMP/profile.mobileprovision ~/Library/Developer/Xcode/UserData/Provisioning\ Profiles/$UUID.mobileprovision
 
+      - name: Compute build number
+        id: build_number
+        run: |
+          # CFBundleVersion = build number. Must be monotonically increasing within a
+          # given CFBundleShortVersionString. We use GITHUB_RUN_NUMBER (which only ever
+          # goes up) + 100 offset to stay safely above any manually-set previous build.
+          BUILD_NUMBER=$((100 + GITHUB_RUN_NUMBER))
+          echo "Build number: $BUILD_NUMBER (GITHUB_RUN_NUMBER=$GITHUB_RUN_NUMBER)"
+          echo "value=$BUILD_NUMBER" >> $GITHUB_OUTPUT
+
       - name: Build & archive IPA (Release)
         run: |
           dotnet publish $PROJECT_PATH \
             -f $TARGET_FRAMEWORK \
             -c $CONFIGURATION \
             /p:ArchiveOnBuild=true \
-            /p:BuildIpa=true
+            /p:BuildIpa=true \
+            /p:ApplicationVersion=${{ steps.build_number.outputs.value }}
 
       - name: Locate IPA
         id: ipa
