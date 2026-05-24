@@ -22,13 +22,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Select Xcode 26
+      - name: Select latest Xcode 26
         run: |
-          # Liste les Xcode dispo pour debug
+          # Liste les Xcode dispo
           ls /Applications/ | grep -i Xcode || true
-          sudo xcode-select -s /Applications/Xcode_26.app/Contents/Developer || \
-          sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+          # Sélectionne le dernier Xcode 26.x.y présent sur le runner
+          XCODE_PATH=$(ls -d /Applications/Xcode_26.*.app 2>/dev/null | sort -V | tail -1)
+          if [ -z "$XCODE_PATH" ]; then
+            echo "::error::No Xcode 26 found on runner"
+            exit 1
+          fi
+          echo "Selected Xcode: $XCODE_PATH"
+          sudo xcode-select -s "$XCODE_PATH/Contents/Developer"
           xcodebuild -version
+          xcrun --find actool
 
       - name: Setup .NET 8
         uses: actions/setup-dotnet@v4
