@@ -24,11 +24,13 @@
 		<ApplicationTitle>RealSpeed2</ApplicationTitle>
 
 		<!-- App Identifier -->
-		<ApplicationId>com.companyname.realspeed2</ApplicationId>
+		<ApplicationId>com.cabbry.realspeed2</ApplicationId>
 
 		<!-- Versions -->
-		<ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
-		<ApplicationVersion>1</ApplicationVersion>
+		<!-- ApplicationDisplayVersion = CFBundleShortVersionString: max 3 entiers (X.Y.Z) -->
+		<ApplicationDisplayVersion>0.1.2</ApplicationDisplayVersion>
+		<!-- ApplicationVersion = CFBundleVersion: build number, doit augmenter à chaque upload -->
+		<ApplicationVersion>5</ApplicationVersion>
 
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">11.0</SupportedOSPlatformVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">13.1</SupportedOSPlatformVersion>
@@ -42,10 +44,19 @@
 	  <RuntimeIdentifiers>iossimulator-x64;iossimulator-arm64;ios-arm64</RuntimeIdentifiers>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(TargetFramework)'=='net8.0-ios'">
+	<PropertyGroup Condition="'$(TargetFramework)'=='net8.0-ios' AND '$(Configuration)'=='Debug'">
 	  <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == ''">iossimulator-x64</RuntimeIdentifier>
 	  <CodesignKey>Apple Development: Created via API (44NKN5D232)</CodesignKey>
 	  <CodesignProvision>VS: WildCard Development</CodesignProvision>
+	</PropertyGroup>
+
+	<!-- iOS Release / App Store distribution -->
+	<PropertyGroup Condition="'$(TargetFramework)'=='net8.0-ios' AND '$(Configuration)'=='Release'">
+	  <RuntimeIdentifier>ios-arm64</RuntimeIdentifier>
+	  <CodesignKey>Apple Distribution: Jr Cabbry (R6TQZGC68V)</CodesignKey>
+	  <CodesignProvision>RealSpeed2 App Store</CodesignProvision>
+	  <ArchiveOnBuild>true</ArchiveOnBuild>
+	  <BuildIpa>true</BuildIpa>
 	</PropertyGroup>
 
 	<!-- Windows AppX deploy requires NTFS; project lives on exFAT (E:), so redirect Windows bin to C:. -->
