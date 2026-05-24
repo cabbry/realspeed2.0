@@ -22,19 +22,43 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Select latest Xcode 26
+      - name: Select Xcode 26 with full SDK set
         run: |
-          # Liste les Xcode dispo
-          ls /Applications/ | grep -i Xcode || true
-          # Sélectionne le dernier Xcode 26.x.y présent sur le runner
-          XCODE_PATH=$(ls -d /Applications/Xcode_26.*.app 2>/dev/null | sort -V | tail -1)
-          if [ -z "$XCODE_PATH" ]; then
-            echo "::error::No Xcode 26 found on runner"
+          # Lists Xcode installations and checks which one has a full SDK set (iOS + macOS)
+          # The .0/.1/.2 suffixed variants on macos-15 runners are sometimes missing the
+          # macOS SDK that Microsoft.iOS workload needs for actool. Prefer non-suffixed variants.
+          echo "== Xcodes available =="
+          ls /Applications/ | grep -i Xcode
+
+          # Candidates: prefer Xcode_26.3.app (sans .0), puis 26.2, 26.1, 26.0, puis variantes .0
+          CANDIDATES="Xcode_26.3.app Xcode_26.2.app Xcode_26.1.app Xcode_26.0.app Xcode_26.3.0.app Xcode_26.2.0.app Xcode_26.1.1.app Xcode_26.0.1.app"
+
+          PICKED=""
+          for candidate in $CANDIDATES; do
+            path="/Applications/$candidate"
+            if [ -d "$path" ]; then
+              sdks_dir="$path/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs"
+              echo "Checking $candidate -> $sdks_dir"
+              if [ -d "$sdks_dir" ] && ls "$sdks_dir" | grep -q "MacOSX"; then
+                echo "  ✓ Has macOS SDK(s): $(ls $sdks_dir | tr '\n' ' ')"
+                PICKED="$path"
+                break
+              else
+                echo "  ✗ Missing macOS SDK"
+              fi
+            fi
+          done
+
+          if [ -z "$PICKED" ]; then
+            echo "::error::No Xcode 26 with macOS SDK found"
             exit 1
           fi
-          echo "Selected Xcode: $XCODE_PATH"
-          sudo xcode-select -s "$XCODE_PATH/Contents/Developer"
+
+          echo "Selected Xcode: $PICKED"
+          sudo xcode-select -s "$PICKED/Contents/Developer"
           xcodebuild -version
+          echo "== iOS SDKs in selected Xcode =="
+          ls $PICKED/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/ || true
           xcrun --find actool
 
       - name: Inspect preinstalled .NET and workloads
