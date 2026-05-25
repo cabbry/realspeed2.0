@@ -31,6 +31,11 @@
 	<!-- CFBundleShortVersionString and CFBundleVersion are injected from the .csproj
 	     (ApplicationDisplayVersion / ApplicationVersion). In CI, ApplicationVersion
 	     is overridden by GITHUB_RUN_NUMBER so each build gets a unique increment. -->
+	<!-- Pre-answer the App Store "encryption compliance" question so each TestFlight
+	     upload is not blocked waiting for manual validation. The app uses only the
+	     OS-provided HTTPS (exempt) and no custom cryptography. -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>We need your location to compute your real-time speed.</string>
 	<key>XSAppIconAssets</key>
