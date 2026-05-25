@@ -1,10 +1,13 @@
 using Microsoft.Maui.ApplicationModel;
 using Microsoft.Maui.Devices.Sensors;
+using Microsoft.Maui.Storage;
 
 namespace RealSpeed2
 {
     public partial class MainPage : ContentPage
     {
+        private const string MaxSpeedPrefKey = "MaxSpeedKmh";
+
         private Location? _previousLocation;
         private readonly LocationViewModel _viewModel;
         private double _maxSpeedKmh;
@@ -18,6 +21,10 @@ namespace RealSpeed2
 
             _viewModel = new LocationViewModel();
             BindingContext = _viewModel;
+
+            // Restore the persisted max speed so it survives app restarts.
+            _maxSpeedKmh = Preferences.Default.Get(MaxSpeedPrefKey, 0.0);
+            _viewModel.MaxSpeed = FormatSpeed(_maxSpeedKmh);
         }
 
         protected override async void OnAppearing()
@@ -126,6 +133,7 @@ namespace RealSpeed2
                 {
                     _maxSpeedKmh = realSpeedKmh;
                     _viewModel.MaxSpeed = FormatSpeed(_maxSpeedKmh);
+                    Preferences.Default.Set(MaxSpeedPrefKey, _maxSpeedKmh);
                 }
             }
 
@@ -147,6 +155,7 @@ namespace RealSpeed2
         {
             _maxSpeedKmh = 0.0;
             _viewModel.MaxSpeed = FormatSpeed(0.0);
+            Preferences.Default.Set(MaxSpeedPrefKey, 0.0);
         }
     }
 }
