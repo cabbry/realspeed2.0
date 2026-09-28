@@ -4,81 +4,98 @@
              x:Class="RealSpeed2.MainPage"          
              >
 
-    <ScrollView>
-        <VerticalStackLayout
-            Padding="30,0"
-            Spacing="25">
+    <!-- Row 1 holds the map: collapsed to 0 by default, switched to * (half the screen) by "Show Map". -->
+    <Grid x:Name="rootGrid"
+          RowDefinitions="*,0">
 
-            <Label
-                x:Name="lblRealSpeed"
-                Text="{Binding RealSpeed}"
-                Style="{StaticResource Speed}"
-                SemanticProperties.HeadingLevel="Level2"
-                SemanticProperties.Description="GPS Real Speed" />
+        <ScrollView Grid.Row="0">
+            <VerticalStackLayout
+                Padding="30,0"
+                Spacing="25">
 
-            <Label
-                Text="Km/h"
-                Style="{StaticResource SpeedUnit}"
-                SemanticProperties.HeadingLevel="Level1" />
-
-            <StackLayout x:Name="pnlGPSDetails"
-                         IsVisible="False"
-                         Padding="10"
-                         Margin="10"
-                         >
                 <Label
-                    Text="GPS :"
-                    Style="{StaticResource GPSDetails}"
-                    SemanticProperties.HeadingLevel="Level1" />
-                <Label
-                    x:Name="lblGPSDetails"
-                    Text="{Binding Location}"
-                    Style="{StaticResource GPSDetails}"
+                    x:Name="lblRealSpeed"
+                    Text="{Binding RealSpeed}"
+                    Style="{StaticResource Speed}"
                     SemanticProperties.HeadingLevel="Level2"
-                    SemanticProperties.Description="GPS all details" />
+                    SemanticProperties.Description="GPS Real Speed" />
+
                 <Label
-                    Text="Calculated Speed (Haversine Distance / time) :"
-                    Style="{StaticResource GPSDetails}"
+                    Text="Km/h"
+                    Style="{StaticResource SpeedUnit}"
                     SemanticProperties.HeadingLevel="Level1" />
+
+                <StackLayout x:Name="pnlGPSDetails"
+                             IsVisible="False"
+                             Padding="10"
+                             Margin="10"
+                             >
+                    <Label
+                        Text="GPS :"
+                        Style="{StaticResource GPSDetails}"
+                        SemanticProperties.HeadingLevel="Level1" />
+                    <Label
+                        x:Name="lblGPSDetails"
+                        Text="{Binding Location}"
+                        Style="{StaticResource GPSDetails}"
+                        SemanticProperties.HeadingLevel="Level2"
+                        SemanticProperties.Description="GPS all details" />
+                    <Label
+                        Text="Calculated Speed (Haversine Distance / time) :"
+                        Style="{StaticResource GPSDetails}"
+                        SemanticProperties.HeadingLevel="Level1" />
+                    <Label
+                     x:Name="lblGPSSpeed"
+                     Text="{Binding CalculatedSpeed}"
+                     Style="{StaticResource GPSDetails}"
+                     SemanticProperties.HeadingLevel="Level2"
+                     SemanticProperties.Description="GPS Calculated Speed" />
+                    <Label
+                        Text="{Binding UpdateCount, StringFormat='Updates received: {0}'}"
+                        Style="{StaticResource GPSDetails}" />
+                    <Label
+                        Text="{Binding LastUpdate, StringFormat='Last update: {0:HH:mm:ss.fff}'}"
+                        Style="{StaticResource GPSDetails}" />
+
+                </StackLayout>
+
+                <Button Text="Show GPS details"
+                        Style="{StaticResource BtnGPSDetails}"
+                        Clicked="OnGetGPSInfoClicked"/>
+
                 <Label
-                 x:Name="lblGPSSpeed"
-                 Text="{Binding CalculatedSpeed}"
-                 Style="{StaticResource GPSDetails}"
-                 SemanticProperties.HeadingLevel="Level2"
-                 SemanticProperties.Description="GPS Calculated Speed" />
+                    x:Name="lblMaxSpeed"
+                    Text="{Binding MaxSpeed, StringFormat='Vmax {0} Km/h'}"
+                    Style="{StaticResource SpeedUnit}"
+                    SemanticProperties.HeadingLevel="Level2"
+                    SemanticProperties.Description="Maximum speed reached" />
+
+                <Button Text="Reset Vmax"
+                        Style="{StaticResource BtnGPSDetails}"
+                        Clicked="OnResetMaxSpeedClicked"/>
+
+                <!-- .NET MAUI Maps has no Windows implementation, so the button is hidden there. -->
+                <Button Text="Show Map"
+                        Style="{StaticResource BtnGPSDetails}"
+                        IsVisible="{OnPlatform Default=True, WinUI=False}"
+                        Clicked="OnShowMapClicked"/>
+
                 <Label
-                    Text="{Binding UpdateCount, StringFormat='Updates received: {0}'}"
-                    Style="{StaticResource GPSDetails}" />
-                <Label
-                    Text="{Binding LastUpdate, StringFormat='Last update: {0:HH:mm:ss.fff}'}"
-                    Style="{StaticResource GPSDetails}" />
+                    x:Name="lblGPSLog"
+                    Text=""
+                    Style="{StaticResource SubHeadline}"
+                    SemanticProperties.HeadingLevel="Level2"
+                    SemanticProperties.Description="GPS logs" />
 
-            </StackLayout>
+            </VerticalStackLayout>
 
-            <Button Text="Show GPS details"
-                    Style="{StaticResource BtnGPSDetails}"
-                    Clicked="OnGetGPSInfoClicked"/>
+        </ScrollView>
 
-            <Label
-                x:Name="lblMaxSpeed"
-                Text="{Binding MaxSpeed, StringFormat='Vmax {0} Km/h'}"
-                Style="{StaticResource SpeedUnit}"
-                SemanticProperties.HeadingLevel="Level2"
-                SemanticProperties.Description="Maximum speed reached" />
+        <!-- The map itself is created in code on first use (see OnShowMapClicked). -->
+        <ContentView x:Name="mapHost"
+                     Grid.Row="1"
+                     IsVisible="False" />
 
-            <Button Text="Reset Vmax"
-                    Style="{StaticResource BtnGPSDetails}"
-                    Clicked="OnResetMaxSpeedClicked"/>
-
-            <Label
-                x:Name="lblGPSLog"
-                Text=""
-                Style="{StaticResource SubHeadline}"
-                SemanticProperties.HeadingLevel="Level2"
-                SemanticProperties.Description="GPS logs" />
-
-        </VerticalStackLayout>
-
-    </ScrollView>
+    </Grid>
 
 </ContentPage>

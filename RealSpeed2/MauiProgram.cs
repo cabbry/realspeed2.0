@@ -17,6 +17,10 @@ namespace RealSpeed2
                     fonts.AddFont("Caracas.ttf", "Caracas");
                 });
 
+#if !WINDOWS
+            builder.UseMauiMaps();
+#endif
+
 #if DEBUG
     		builder.Logging.AddDebug();
 #endif

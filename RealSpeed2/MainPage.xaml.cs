@@ -1,6 +1,10 @@
 using Microsoft.Maui.ApplicationModel;
 using Microsoft.Maui.Devices.Sensors;
 using Microsoft.Maui.Storage;
+#if !WINDOWS
+// Aliased: the unqualified name "Map" clashes with Microsoft.Maui.ApplicationModel.Map.
+using MauiMap = Microsoft.Maui.Controls.Maps.Map;
+#endif
 
 namespace RealSpeed2
 {
@@ -13,6 +17,8 @@ namespace RealSpeed2
         private double _maxSpeedKmh;
 #if WINDOWS
         private CancellationTokenSource? _pollingCts;
+#else
+        private MauiMap? _map;
 #endif
 
         public MainPage()
@@ -157,5 +163,39 @@ namespace RealSpeed2
             _viewModel.MaxSpeed = FormatSpeed(0.0);
             Preferences.Default.Set(MaxSpeedPrefKey, 0.0);
         }
+
+        private void OnShowMapClicked(object sender, EventArgs e)
+        {
+#if !WINDOWS
+            // Created on first use so MapKit is only loaded if the map is actually opened.
+            if (_map == null)
+            {
+                _map = new MauiMap { IsShowingUser = true };
+                _map.HandlerChanged += (_, _) => FollowUser();
+                mapHost.Content = _map;
+            }
+
+            var show = !mapHost.IsVisible;
+            mapHost.IsVisible = show;
+            // Two equal rows split the screen in half; a 0-height row gives the full screen back to the speed display.
+            rootGrid.RowDefinitions[1].Height = show ? GridLength.Star : new GridLength(0);
+            ((Button)sender).Text = show ? "Hide Map" : "Show Map";
+
+            if (show)
+                FollowUser();
+#endif
+        }
+
+#if !WINDOWS
+        // Let MapKit keep the map centred on the user while preserving the zoom level they pick.
+        // Panning the map suspends following; hiding and showing the map again resumes it.
+        private void FollowUser()
+        {
+#if IOS || MACCATALYST
+            if (_map?.Handler?.PlatformView is MapKit.MKMapView mapView)
+                mapView.SetUserTrackingMode(MapKit.MKUserTrackingMode.Follow, true);
+#endif
+        }
+#endif
     }
 }
