@@ -20,6 +20,9 @@ namespace RealSpeed2
 #else
         private MauiMap? _map;
 #endif
+#if IOS || MACCATALYST
+        private readonly BeaconsMapLayer _beaconsLayer = new();
+#endif
 
         public MainPage()
         {
@@ -38,6 +41,9 @@ namespace RealSpeed2
             base.OnAppearing();
 
             DeviceDisplay.KeepScreenOn = true;
+
+            if (Window != null)
+                Window.Resumed += OnWindowResumed;
 
             try
             {
@@ -72,6 +78,9 @@ namespace RealSpeed2
             base.OnDisappearing();
 
             DeviceDisplay.KeepScreenOn = false;
+
+            if (Window != null)
+                Window.Resumed -= OnWindowResumed;
 
 #if WINDOWS
             _pollingCts?.Cancel();
@@ -171,7 +180,11 @@ namespace RealSpeed2
             if (_map == null)
             {
                 _map = new MauiMap { IsShowingUser = true };
-                _map.HandlerChanged += (_, _) => FollowUser();
+                _map.HandlerChanged += (_, _) =>
+                {
+                    FollowUser();
+                    ShowBeacons();
+                };
                 mapHost.Content = _map;
             }
 
@@ -182,7 +195,23 @@ namespace RealSpeed2
             ((Button)sender).Text = show ? "Hide Map" : "Show Map";
 
             if (show)
+            {
                 FollowUser();
+                ShowBeacons();
+            }
+#endif
+        }
+
+        // The user may have edited their beacons in the Beacons app while RealSpeed was in the background.
+        private void OnWindowResumed(object? sender, EventArgs e) => ShowBeacons();
+
+        // Beacons shared by the Beacons app, re-read each time the map is opened or the app comes back
+        // to the foreground. Added without moving the map, so following the user is unaffected.
+        private void ShowBeacons()
+        {
+#if IOS || MACCATALYST
+            if (_map?.Handler?.PlatformView is MapKit.MKMapView mapView)
+                _beaconsLayer.Show(mapView, SharedBeacons.Load());
 #endif
         }
 

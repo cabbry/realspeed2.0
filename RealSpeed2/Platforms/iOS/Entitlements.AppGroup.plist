@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Shared with the Beacons app (com.cabbry.beacons), which publishes beacons-shared.json here.
+	     Only used when EnableAppGroup is true (see RealSpeed2.csproj). Not named Entitlements.plist
+	     on purpose, so the SDK doesn't pick it up automatically. -->
+	<key>com.apple.security.application-groups</key>
+	<array>
+		<string>group.com.cabbry.beacons</string>
+	</array>
+</dict>
+</plist>

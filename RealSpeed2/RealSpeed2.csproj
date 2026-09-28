@@ -59,6 +59,17 @@
 	  <BuildIpa>true</BuildIpa>
 	</PropertyGroup>
 
+	<!-- App Group shared with the Beacons app (com.cabbry.beacons) to show its beacons on the map (see SharedBeacons.cs).
+	     Off by default: signing fails until the App Group is enabled on the com.cabbry.realspeed2 App ID and the
+	     provisioning profiles are regenerated with it (a wildcard dev profile can't carry an App Group).
+	     Without it the map simply shows no beacons. Turn on here, or per build with -p:EnableAppGroup=true. -->
+	<PropertyGroup>
+	  <EnableAppGroup Condition="'$(EnableAppGroup)' == ''">false</EnableAppGroup>
+	</PropertyGroup>
+	<PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios' AND '$(EnableAppGroup)' == 'true'">
+	  <CodesignEntitlements>Platforms\iOS\Entitlements.AppGroup.plist</CodesignEntitlements>
+	</PropertyGroup>
+
 	<!-- Windows AppX deploy requires NTFS; project lives on exFAT (E:), so redirect Windows bin to C:. -->
 	<PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
 	  <BaseOutputPath>C:\Builds\RealSpeed2\bin\</BaseOutputPath>
