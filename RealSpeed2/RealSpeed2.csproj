@@ -28,7 +28,7 @@
 
 		<!-- Versions -->
 		<!-- ApplicationDisplayVersion = CFBundleShortVersionString: max 3 entiers (X.Y.Z) -->
-		<ApplicationDisplayVersion>0.1.2</ApplicationDisplayVersion>
+		<ApplicationDisplayVersion>0.2.0</ApplicationDisplayVersion>
 		<!-- ApplicationVersion = CFBundleVersion: build number, doit augmenter à chaque upload -->
 		<ApplicationVersion>5</ApplicationVersion>
 
