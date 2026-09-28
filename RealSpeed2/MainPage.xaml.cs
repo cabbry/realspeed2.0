@@ -181,7 +181,7 @@ namespace RealSpeed2
         private void SetMapVisible(bool show)
         {
 #if !WINDOWS
-            // Created on first use so MapKit is only loaded if the map is actually opened.
+            // Created on opening and released on closing (see ReleaseMap), so MapKit only runs while the map is shown.
             if (show && _map == null)
             {
                 _map = new MauiMap { IsShowingUser = true };
@@ -207,21 +207,41 @@ namespace RealSpeed2
                 FollowUser();
                 ShowBeacons();
             }
+            else
+            {
+                ReleaseMap();
+            }
 #endif
         }
 
-        // Open24DisplaySt draws its glyphs well inside the line box: per the font's metrics, 0.34 em of empty
-        // ascent above the digits and 0.13 em of descent below them (about 64 pt and 25 pt at the speed's size).
-        // Compact mode trims most of that and tightens the spacing so the speed and its unit fit in a third
-        // of the screen, even on an iPhone SE.
+#if !WINDOWS
+        // A closed map must not use data. Merely hidden, MapKit would keep tracking the user and could keep
+        // loading tiles as they move, so the map is torn down instead; reopening builds a fresh one.
+        private void ReleaseMap()
+        {
+            if (_map == null)
+                return;
+
+            mapHost.Content = null;
+            _map.Handler?.DisconnectHandler();
+            _map = null;
+        }
+#endif
+
+        // Open24DisplaySt draws its glyphs well inside the line box: per the font's metrics, 0.335 em of empty
+        // ascent above the digits and 0.132 em of descent below them (about 64 pt and 25 pt at the speed's size).
+        // Compact mode trims all of it and centres the result, so the speed and its unit fit in a third of the
+        // screen (even on an iPhone SE) with the same gap above the digits as below "Km/h".
         private void CompactSpeedDisplay(bool compact)
         {
             lblRealSpeed.Margin = compact ? TrimmedLineBox(lblRealSpeed.FontSize) : Thickness.Zero;
             lblSpeedUnit.Margin = compact ? TrimmedLineBox(lblSpeedUnit.FontSize) : Thickness.Zero;
-            pnlMain.Spacing = compact ? 10 : 25; // 25 = Spacing in MainPage.xaml
+            pnlMain.Spacing = compact ? 18 : 25; // 25 = Spacing in MainPage.xaml
+            // In a ScrollView, content smaller than the viewport is positioned by its VerticalOptions.
+            pnlMain.VerticalOptions = compact ? LayoutOptions.Center : LayoutOptions.Fill;
         }
 
-        private static Thickness TrimmedLineBox(double fontSize) => new(0, -0.30 * fontSize, 0, -0.10 * fontSize);
+        private static Thickness TrimmedLineBox(double fontSize) => new(0, -0.335 * fontSize, 0, -0.132 * fontSize);
 
         // The user may have edited their beacons in the Beacons app while RealSpeed was in the background.
         private void OnWindowResumed(object? sender, EventArgs e) => ShowBeacons();

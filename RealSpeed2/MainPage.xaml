@@ -109,7 +109,7 @@
             <BoxView Grid.Row="0"
                      Style="{StaticResource MapSeparator}" />
 
-            <!-- The map itself is created in code on first use (see SetMapVisible). -->
+            <!-- The map itself is created in code while map mode is open (see SetMapVisible). -->
             <ContentView x:Name="mapHost"
                          Grid.Row="1" />
 
