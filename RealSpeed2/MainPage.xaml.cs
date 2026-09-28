@@ -173,11 +173,16 @@ namespace RealSpeed2
             Preferences.Default.Set(MaxSpeedPrefKey, 0.0);
         }
 
-        private void OnShowMapClicked(object sender, EventArgs e)
+        private void OnShowMapClicked(object sender, EventArgs e) => SetMapVisible(true);
+
+        private void OnHideMapClicked(object sender, EventArgs e) => SetMapVisible(false);
+
+        // Map mode: the bottom half shows the map, and the top half keeps only the speed so nothing needs scrolling.
+        private void SetMapVisible(bool show)
         {
 #if !WINDOWS
             // Created on first use so MapKit is only loaded if the map is actually opened.
-            if (_map == null)
+            if (show && _map == null)
             {
                 _map = new MauiMap { IsShowingUser = true };
                 _map.HandlerChanged += (_, _) =>
@@ -188,14 +193,15 @@ namespace RealSpeed2
                 mapHost.Content = _map;
             }
 
-            var show = !mapHost.IsVisible;
-            mapHost.IsVisible = show;
+            mapSection.IsVisible = show;
+            pnlControls.IsVisible = !show;
             // Two equal rows split the screen in half; a 0-height row gives the full screen back to the speed display.
             rootGrid.RowDefinitions[1].Height = show ? GridLength.Star : new GridLength(0);
-            ((Button)sender).Text = show ? "Hide Map" : "Show Map";
 
             if (show)
             {
+                // The speed must be in view: the user may have scrolled down to reach "Show Map".
+                _ = mainScroll.ScrollToAsync(0, 0, false);
                 FollowUser();
                 ShowBeacons();
             }
