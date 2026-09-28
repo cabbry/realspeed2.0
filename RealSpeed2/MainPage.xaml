@@ -4,13 +4,14 @@
              x:Class="RealSpeed2.MainPage"          
              >
 
-    <!-- Row 1 holds the map section: collapsed to 0 by default, switched to * (half the screen) in map mode. -->
+    <!-- Row 1 holds the map section: collapsed to 0 by default, switched to 2* (two thirds of the screen) in map mode. -->
     <Grid x:Name="rootGrid"
           RowDefinitions="*,0">
 
         <ScrollView x:Name="mainScroll"
                     Grid.Row="0">
             <VerticalStackLayout
+                x:Name="pnlMain"
                 Padding="30,0"
                 Spacing="25">
 
@@ -22,11 +23,12 @@
                     SemanticProperties.Description="GPS Real Speed" />
 
                 <Label
+                    x:Name="lblSpeedUnit"
                     Text="Km/h"
                     Style="{StaticResource SpeedUnit}"
                     SemanticProperties.HeadingLevel="Level1" />
 
-                <!-- Hidden in map mode, so the top half only shows the speed and needs no scrolling. -->
+                <!-- Hidden in map mode, so the top third only shows the speed and needs no scrolling. -->
                 <VerticalStackLayout x:Name="pnlControls"
                                      Spacing="25">
 
@@ -98,21 +100,23 @@
 
         </ScrollView>
 
-        <!-- Map mode: separator line, map, then the button to leave map mode. -->
+        <!-- Map mode: the map between two separator lines, then the button to leave map mode. -->
         <Grid x:Name="mapSection"
               Grid.Row="1"
-              RowDefinitions="Auto,*,Auto"
+              RowDefinitions="Auto,*,Auto,Auto"
               IsVisible="False">
 
             <BoxView Grid.Row="0"
-                     HeightRequest="3"
-                     Color="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource White}}" />
+                     Style="{StaticResource MapSeparator}" />
 
             <!-- The map itself is created in code on first use (see SetMapVisible). -->
             <ContentView x:Name="mapHost"
                          Grid.Row="1" />
 
-            <Button Grid.Row="2"
+            <BoxView Grid.Row="2"
+                     Style="{StaticResource MapSeparator}" />
+
+            <Button Grid.Row="3"
                     Text="Hide Map"
                     Style="{StaticResource BtnGPSDetails}"
                     Margin="30,10"

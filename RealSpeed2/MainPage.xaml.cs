@@ -177,7 +177,7 @@ namespace RealSpeed2
 
         private void OnHideMapClicked(object sender, EventArgs e) => SetMapVisible(false);
 
-        // Map mode: the bottom half shows the map, and the top half keeps only the speed so nothing needs scrolling.
+        // Map mode: the bottom two thirds show the map, and the top third keeps only the speed so nothing needs scrolling.
         private void SetMapVisible(bool show)
         {
 #if !WINDOWS
@@ -195,8 +195,10 @@ namespace RealSpeed2
 
             mapSection.IsVisible = show;
             pnlControls.IsVisible = !show;
-            // Two equal rows split the screen in half; a 0-height row gives the full screen back to the speed display.
-            rootGrid.RowDefinitions[1].Height = show ? GridLength.Star : new GridLength(0);
+            CompactSpeedDisplay(show);
+            // Rows 1* and 2* give a third to the speed and two thirds to the map; a 0-height row gives the full
+            // screen back to the speed display.
+            rootGrid.RowDefinitions[1].Height = show ? new GridLength(2, GridUnitType.Star) : new GridLength(0);
 
             if (show)
             {
@@ -207,6 +209,19 @@ namespace RealSpeed2
             }
 #endif
         }
+
+        // Open24DisplaySt draws its glyphs well inside the line box: per the font's metrics, 0.34 em of empty
+        // ascent above the digits and 0.13 em of descent below them (about 64 pt and 25 pt at the speed's size).
+        // Compact mode trims most of that and tightens the spacing so the speed and its unit fit in a third
+        // of the screen, even on an iPhone SE.
+        private void CompactSpeedDisplay(bool compact)
+        {
+            lblRealSpeed.Margin = compact ? TrimmedLineBox(lblRealSpeed.FontSize) : Thickness.Zero;
+            lblSpeedUnit.Margin = compact ? TrimmedLineBox(lblSpeedUnit.FontSize) : Thickness.Zero;
+            pnlMain.Spacing = compact ? 10 : 25; // 25 = Spacing in MainPage.xaml
+        }
+
+        private static Thickness TrimmedLineBox(double fontSize) => new(0, -0.30 * fontSize, 0, -0.10 * fontSize);
 
         // The user may have edited their beacons in the Beacons app while RealSpeed was in the background.
         private void OnWindowResumed(object? sender, EventArgs e) => ShowBeacons();
