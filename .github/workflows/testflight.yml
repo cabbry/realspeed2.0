@@ -166,11 +166,20 @@ jobs:
           echo "$APP_STORE_CONNECT_PRIVATE_KEY" > ~/private_keys/AuthKey_${APP_STORE_CONNECT_KEY_ID}.p8
 
           # Upload via altool (lit la clé dans ~/private_keys automatiquement)
+          # altool peut sortir en code 0 alors que l'upload a été rejeté par Apple
+          # (certificat révoqué, version fermée...) : on garde sa sortie et on
+          # fait échouer l'étape si elle contient "UPLOAD FAILED".
+          set -o pipefail
           xcrun altool --upload-app \
             -f "${{ steps.ipa.outputs.ipa_path }}" \
             -t ios \
             --apiKey "$APP_STORE_CONNECT_KEY_ID" \
-            --apiIssuer "$APP_STORE_CONNECT_ISSUER_ID"
+            --apiIssuer "$APP_STORE_CONNECT_ISSUER_ID" 2>&1 | tee $RUNNER_TEMP/altool.log
+
+          if grep -q "UPLOAD FAILED" $RUNNER_TEMP/altool.log; then
+            echo "::error::TestFlight upload rejected by Apple (see altool output above)"
+            exit 1
+          fi
 
       - name: Cleanup keychain
         if: always()

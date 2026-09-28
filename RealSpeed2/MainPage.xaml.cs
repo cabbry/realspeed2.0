@@ -1,6 +1,10 @@
 using Microsoft.Maui.ApplicationModel;
 using Microsoft.Maui.Devices.Sensors;
 using Microsoft.Maui.Storage;
+#if !WINDOWS
+// Aliased: the unqualified name "Map" clashes with Microsoft.Maui.ApplicationModel.Map.
+using MauiMap = Microsoft.Maui.Controls.Maps.Map;
+#endif
 
 namespace RealSpeed2
 {
@@ -13,6 +17,11 @@ namespace RealSpeed2
         private double _maxSpeedKmh;
 #if WINDOWS
         private CancellationTokenSource? _pollingCts;
+#else
+        private MauiMap? _map;
+#endif
+#if IOS || MACCATALYST
+        private readonly BeaconsMapLayer _beaconsLayer = new();
 #endif
 
         public MainPage()
@@ -32,6 +41,9 @@ namespace RealSpeed2
             base.OnAppearing();
 
             DeviceDisplay.KeepScreenOn = true;
+
+            if (Window != null)
+                Window.Resumed += OnWindowResumed;
 
             try
             {
@@ -66,6 +78,9 @@ namespace RealSpeed2
             base.OnDisappearing();
 
             DeviceDisplay.KeepScreenOn = false;
+
+            if (Window != null)
+                Window.Resumed -= OnWindowResumed;
 
 #if WINDOWS
             _pollingCts?.Cancel();
@@ -157,5 +172,100 @@ namespace RealSpeed2
             _viewModel.MaxSpeed = FormatSpeed(0.0);
             Preferences.Default.Set(MaxSpeedPrefKey, 0.0);
         }
+
+        private void OnShowMapClicked(object sender, EventArgs e) => SetMapVisible(true);
+
+        private void OnHideMapClicked(object sender, EventArgs e) => SetMapVisible(false);
+
+        // Map mode: the bottom two thirds show the map, and the top third keeps only the speed so nothing needs scrolling.
+        private void SetMapVisible(bool show)
+        {
+#if !WINDOWS
+            // Created on opening and released on closing (see ReleaseMap), so MapKit only runs while the map is shown.
+            if (show && _map == null)
+            {
+                _map = new MauiMap { IsShowingUser = true };
+                _map.HandlerChanged += (_, _) =>
+                {
+                    FollowUser();
+                    ShowBeacons();
+                };
+                mapHost.Content = _map;
+            }
+
+            mapSection.IsVisible = show;
+            pnlControls.IsVisible = !show;
+            CompactSpeedDisplay(show);
+            // Rows 1* and 2* give a third to the speed and two thirds to the map; a 0-height row gives the full
+            // screen back to the speed display.
+            rootGrid.RowDefinitions[1].Height = show ? new GridLength(2, GridUnitType.Star) : new GridLength(0);
+
+            if (show)
+            {
+                // The speed must be in view: the user may have scrolled down to reach "Show Map".
+                _ = mainScroll.ScrollToAsync(0, 0, false);
+                FollowUser();
+                ShowBeacons();
+            }
+            else
+            {
+                ReleaseMap();
+            }
+#endif
+        }
+
+#if !WINDOWS
+        // A closed map must not use data. Merely hidden, MapKit would keep tracking the user and could keep
+        // loading tiles as they move, so the map is torn down instead; reopening builds a fresh one.
+        private void ReleaseMap()
+        {
+            if (_map == null)
+                return;
+
+            mapHost.Content = null;
+            _map.Handler?.DisconnectHandler();
+            _map = null;
+        }
+#endif
+
+        // Open24DisplaySt draws its glyphs well inside the line box: per the font's metrics, 0.335 em of empty
+        // ascent above the digits and 0.132 em of descent below them (about 64 pt and 25 pt at the speed's size).
+        // Compact mode trims all of it and centres the result, so the speed and its unit fit in a third of the
+        // screen (even on an iPhone SE) with the same gap above the digits as below "Km/h".
+        private void CompactSpeedDisplay(bool compact)
+        {
+            lblRealSpeed.Margin = compact ? TrimmedLineBox(lblRealSpeed.FontSize) : Thickness.Zero;
+            lblSpeedUnit.Margin = compact ? TrimmedLineBox(lblSpeedUnit.FontSize) : Thickness.Zero;
+            pnlMain.Spacing = compact ? 18 : 25; // 25 = Spacing in MainPage.xaml
+            // In a ScrollView, content smaller than the viewport is positioned by its VerticalOptions.
+            pnlMain.VerticalOptions = compact ? LayoutOptions.Center : LayoutOptions.Fill;
+        }
+
+        private static Thickness TrimmedLineBox(double fontSize) => new(0, -0.335 * fontSize, 0, -0.132 * fontSize);
+
+        // The user may have edited their beacons in the Beacons app while RealSpeed was in the background.
+        private void OnWindowResumed(object? sender, EventArgs e) => ShowBeacons();
+
+        // Beacons shared by the Beacons app, re-read each time the map is opened or the app comes back
+        // to the foreground. Added without moving the map, so following the user is unaffected.
+        private void ShowBeacons()
+        {
+#if IOS || MACCATALYST
+            if (_map?.Handler?.PlatformView is MapKit.MKMapView mapView)
+                _beaconsLayer.Show(mapView, SharedBeacons.Load());
+#endif
+        }
+
+#if !WINDOWS
+        // Let MapKit keep the map centred on the user while preserving the zoom level they pick.
+        // Panning the map suspends following; hiding and showing the map again resumes it.
+        private void FollowUser()
+        {
+#if IOS || MACCATALYST
+            if (_map?.Handler?.PlatformView is MapKit.MKMapView mapView)
+                mapView.SetUserTrackingMode(MapKit.MKUserTrackingMode.Follow, true);
+#endif
+        }
+#endif
     }
 }

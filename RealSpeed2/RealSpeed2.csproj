@@ -27,8 +27,10 @@
 		<ApplicationId>com.cabbry.realspeed2</ApplicationId>
 
 		<!-- Versions -->
-		<!-- ApplicationDisplayVersion = CFBundleShortVersionString: max 3 entiers (X.Y.Z) -->
-		<ApplicationDisplayVersion>0.1.2</ApplicationDisplayVersion>
+		<!-- ApplicationDisplayVersion = CFBundleShortVersionString: max 3 entiers (X.Y.Z)
+		     Nouvelle version à chaque build envoyé sur TestFlight : incrémenter la mineure ou le patch.
+		     La série 2.x fait suite à la 1.0 publiée sur l'App Store. -->
+		<ApplicationDisplayVersion>2.0.2</ApplicationDisplayVersion>
 		<!-- ApplicationVersion = CFBundleVersion: build number, doit augmenter à chaque upload -->
 		<ApplicationVersion>5</ApplicationVersion>
 
@@ -57,6 +59,19 @@
 	  <CodesignProvision>RealSpeed2 App Store</CodesignProvision>
 	  <ArchiveOnBuild>true</ArchiveOnBuild>
 	  <BuildIpa>true</BuildIpa>
+	</PropertyGroup>
+
+	<!-- App Group shared with the Beacons app (com.cabbry.beacons) to show its beacons on the map (see SharedBeacons.cs).
+	     The provisioning profile must carry the group, or signing fails. On in Release: the "RealSpeed2 App Store"
+	     profile does. Off in Debug: the wildcard dev profile can't carry an App Group, so Debug builds need an
+	     explicit com.cabbry.realspeed2 dev profile first. Without it the map simply shows no beacons.
+	     Override per build with -p:EnableAppGroup=true|false. -->
+	<PropertyGroup>
+	  <EnableAppGroup Condition="'$(EnableAppGroup)' == '' AND '$(Configuration)' == 'Release'">true</EnableAppGroup>
+	  <EnableAppGroup Condition="'$(EnableAppGroup)' == ''">false</EnableAppGroup>
+	</PropertyGroup>
+	<PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios' AND '$(EnableAppGroup)' == 'true'">
+	  <CodesignEntitlements>Platforms\iOS\Entitlements.AppGroup.plist</CodesignEntitlements>
 	</PropertyGroup>
 
 	<!-- Windows AppX deploy requires NTFS; project lives on exFAT (E:), so redirect Windows bin to C:. -->
@@ -96,6 +111,11 @@
 		<PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="10.0.0" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
 		<PackageReference Include="Microsoft.Maui.Essentials" Version="10.0.0" />
+	</ItemGroup>
+
+	<!-- .NET MAUI Maps (Apple MapKit on iOS/MacCatalyst, no API key needed). Not implemented on Windows, so not referenced there. -->
+	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) != 'windows'">
+		<PackageReference Include="Microsoft.Maui.Controls.Maps" Version="10.0.0" />
 	</ItemGroup>
 
 </Project>

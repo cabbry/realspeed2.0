@@ -35,7 +35,7 @@
 </head>
 <body>
   <h1>Privacy Policy for RealSpeed2</h1>
-  <p class="updated"><em>Last updated: May 22, 2026</em></p>
+  <p class="updated"><em>Last updated: September 28, 2026</em></p>
 
   <p>Thank you for using RealSpeed2 ("the App"). Your privacy matters to us.
   This document explains what data the App handles and what it does not.</p>
@@ -43,19 +43,42 @@
   <h2>Summary</h2>
   <p><strong>RealSpeed2 does not collect, store, transmit, or share any
   personal data with us, our servers, or any third party.</strong>
-  Everything happens locally on your device.</p>
+  Everything happens locally on your device. The only exception is the
+  optional map: while it is open, map imagery is downloaded from Apple Maps
+  (see <a href="#map">Map</a> below).</p>
 
   <h2>Location Data</h2>
   <p>The App uses your device's GPS to compute your real-time speed.</p>
   <ul>
     <li>Location data is read only while the App is in use (foreground).</li>
-    <li>Location data is <strong>never</strong> transmitted off your device.</li>
+    <li>The App itself <strong>never</strong> transmits your location off
+    your device (see <a href="#map">Map</a> for what Apple Maps receives when
+    the map is open).</li>
     <li>Location data is <strong>never</strong> stored in any persistent
     file controlled by us.</li>
     <li>iOS asks for your permission before the App accesses your location.
     You can revoke this permission at any time in
     <em>Settings → Privacy &amp; Security → Location Services → RealSpeed2</em>.</li>
   </ul>
+
+  <h2 id="map">Map</h2>
+  <p>The App can show an optional map ("Show Map" button). It is provided by
+  Apple Maps through Apple's MapKit framework, which is part of iOS.</p>
+  <ul>
+    <li>While the map is open, iOS downloads map imagery from Apple for the
+    area displayed, which is around your position. Apple therefore receives
+    requests for that area. This is handled by Apple under the
+    <a href="https://www.apple.com/legal/privacy/">Apple Privacy Policy</a>;
+    we receive nothing.</li>
+    <li>The map is closed by default. When you close it, it is fully released
+    and uses no network data.</li>
+  </ul>
+
+  <h2>Beacons shared by the Beacons app</h2>
+  <p>If you also use our Beacons app, RealSpeed2 shows your beacons on the
+  map. It reads the list that Beacons saves (beacon names, coordinates and
+  colors) from a folder that iOS shares between the two apps on your device.
+  This list is only read locally: RealSpeed2 never modifies or transmits it.</p>
 
   <h2>Stored Data</h2>
   <p>The App stores one value on your device, locally:</p>
@@ -68,7 +91,8 @@
 
   <h2>Third-party services</h2>
   <p>The App does not use any third-party analytics, advertising,
-  crash-reporting, or tracking SDKs.</p>
+  crash-reporting, or tracking SDKs. The only external service is Apple Maps,
+  used for the optional map described above.</p>
 
   <h2>Children's privacy</h2>
   <p>The App is rated 4+ and does not knowingly collect any data from
