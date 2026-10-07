@@ -40,6 +40,7 @@ namespace RealSpeed2
         {
             base.OnAppearing();
 
+            ReviewPrompt.StartSession();
             DeviceDisplay.KeepScreenOn = true;
 
             if (Window != null)
@@ -133,6 +134,7 @@ namespace RealSpeed2
 
         private void ProcessLocation(Location location)
         {
+            ReviewPrompt.OnSpeed(location.Speed);
             _viewModel.UpdateCount++;
             _viewModel.LastUpdate = DateTime.Now;
 
@@ -244,7 +246,11 @@ namespace RealSpeed2
         private static Thickness TrimmedLineBox(double fontSize) => new(0, -0.335 * fontSize, 0, -0.132 * fontSize);
 
         // The user may have edited their beacons in the Beacons app while RealSpeed was in the background.
-        private void OnWindowResumed(object? sender, EventArgs e) => ShowBeacons();
+        private void OnWindowResumed(object? sender, EventArgs e)
+        {
+            ReviewPrompt.StartSession();
+            ShowBeacons();
+        }
 
         // Beacons shared by the Beacons app, re-read each time the map is opened or the app comes back
         // to the foreground. Added without moving the map, so following the user is unaffected.

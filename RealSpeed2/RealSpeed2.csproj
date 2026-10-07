@@ -30,7 +30,7 @@
 		<!-- ApplicationDisplayVersion = CFBundleShortVersionString: max 3 entiers (X.Y.Z)
 		     Nouvelle version à chaque build envoyé sur TestFlight : incrémenter la mineure ou le patch.
 		     La série 2.x fait suite à la 1.0 publiée sur l'App Store. -->
-		<ApplicationDisplayVersion>2.0.2</ApplicationDisplayVersion>
+		<ApplicationDisplayVersion>2.0.3</ApplicationDisplayVersion>
 		<!-- ApplicationVersion = CFBundleVersion: build number, doit augmenter à chaque upload -->
 		<ApplicationVersion>5</ApplicationVersion>
 
